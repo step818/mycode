@@ -6,6 +6,6 @@ user_input = input("Please enter an IPv4 IP address:")
 
 ## print() can be given a series of objects separated by a comma
 print("You told me the IPv4 address is:", user_input)
-user_input_2 = input("Please enter your favorite color:")
-print("Your favorite color is:", user_input_2)
+user_input_2 = input("Please enter the vendor name:")
+print("Your vendor name:", user_input_2)
 
