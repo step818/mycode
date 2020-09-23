@@ -7,7 +7,7 @@ i = 0
 
 for row in csv.reader(f):
     i = i + 1
-
+    
     filename = "admin.rc%d"%(i) 
     
     rcfile = open(filename, "w")
