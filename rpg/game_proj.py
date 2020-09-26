@@ -26,7 +26,8 @@ RPG Game
 Commands:
   go [direction]
   get [item]
-  inspect[noticeable]
+  inspect [noticeable]
+  use [item]
 ''')
 
 def showStatus():
@@ -119,6 +120,9 @@ rooms = {
                 }
          }
 
+# declare all the locked doors
+lockedRooms = ['Gallery']
+
 #start the player in the Hall
 currentRoom = 'Foyer'
 
@@ -127,9 +131,8 @@ showInstructions()
 repeat = True
 #loop forever
 while True:
-
-
-  if (repeat):
+    
+  if(repeat):
     showStatus()
   else:
     repeat = True
@@ -151,7 +154,7 @@ while True:
     if (move[1] in rooms[currentRoom]):
       nextRoom = rooms[currentRoom][move[1]]
       # check if the door to the next room is locked
-      if rooms[nextRoom]['locked']:
+      if nextRoom in lockedRooms:
         print('The door to the room you\'re trying to open is locked')
       else:  
         #set the current room to the new room
@@ -188,3 +191,19 @@ while True:
       #tell them they can't get it
       print('Can\'t get ' + move[1] + '!')
     
+  if move[0] == 'use':
+    if move[1].lower() in inventory:
+    # check if door can be unlocked with move[1]
+    # if move[1] == 'key' and locked == True\
+      nextRoom = rooms[currentRoom]['south']
+      if move[1] == 'key' and nextRoom in lockedRooms:
+        lockedRooms.pop(lockedRooms.index(nextRoom))
+        inventory.pop(inventory.index(move[1]))
+        print(f"A {move[1]} unlocked a door to the {nextRoom}")
+      else:
+        print(f"{move[1]} doesn\'t seem to be useful here")
+    else:
+      print(f"You don\'t have a {move[1]}")
+
+
+
