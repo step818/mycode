@@ -39,15 +39,21 @@ def showStatus():
   if "items" in rooms[currentRoom]:
       for item in rooms[currentRoom]['items']:
           print('You see a ' + item + '\n')
+  # print a significant object in the room if there is one
+  # in case the player wants to get closer for easter eggs
   if "noticeables" in rooms[currentRoom]:
       for thing in rooms[currentRoom]['noticeables']:
           print('You notice a ' + thing + '\n')
   print("---------------------------")
 
+# Print out the secret items when player "inspects <noticeable>"
 def describeNoticeable():
-    print('You see a \n')
-    for item in rooms[currentRoom]['secrets']:
-        print(f' {item} \n')
+    if rooms[currentRoom]['secrets']:
+      print('You see a \n')
+      for item in rooms[currentRoom]['secrets']:
+          print(f' {item} \n')
+    else:
+      print(f"There\'s nothing much to see on the {move[1]}")
 
 #an inventory, which is initially empty
 inventory = []
@@ -56,49 +62,60 @@ inventory = []
 rooms = {
 
             'Foyer' : { 
+                  'locked' : False,
                   'south' : 'Field',
                   'east' : 'Living Room',
                   'north' : 'Dining Room',
                   'west' : 'Hall',
-                  'noticeables': ['Knight Armor'],
+                  'noticeables': ['knight armor'],
+                  'secrets': ['key']
                 },
             'Hall' : {
+                  'locked' : False,
                   'north' : 'Kitchen',
                   'west' : 'Staircase (floor 1)'
                 },
             'Staircase (floor 1)' : {
+                'locked' : False,
                 'up' : 'Under Construction',
                 'down' : 'Dungeon'
                 },
             'Dungeon' : {
+                'locked' : False,
                 'west': 'Staircase (floor 0)'
                 },
             'Staircase (floor 0)' : {
+                'locked' : False,
                 'up' : 'Hall'
                 },
             'Kitchen' : {
+                'locked' : False,
                 'south' : 'Hall',
                 'east' : 'Dining Room'
                 },
             'Dining Room' : {
+                'locked' : False,
                 'east' : 'Living Room',
                 'south' : 'Foyer',
                 'west' : 'Kitchen',
-                'noticeables' : ['Fireplace'],
-                'secrets' : ['Oil Canister']
+                'noticeables' : ['fireplace'],
+                'secrets' : ['match']
                 },
             'Living Room' : {
+                'locked' : False,
                 'south' : 'Gallery',
                 'west' : ['Dining Room', 'Foyer']
                 },
             'Gallery' : {
+                'locked' : True,
                 'north' : 'Living Room',
                 'south' : 'Library',
-                'items' : ['Sword']
+                'items' : ['sword']
                 },
             'Library' : {
                 'north' : 'Gallery',
-                'noticeables' : ['Bookcase']
+                'noticeables' : ['bookcase'],
+                'secrets' : ['candle']
                 }
          }
 
@@ -106,11 +123,16 @@ rooms = {
 currentRoom = 'Foyer'
 
 showInstructions()
-
+# Sometimes, showStatus isn't necessary
+repeat = True
 #loop forever
 while True:
 
-  showStatus()
+
+  if (repeat):
+    showStatus()
+  else:
+    repeat = True
 
   #get the player's next 'move'
   #.split() breaks it up into an list array
@@ -126,20 +148,26 @@ while True:
 
   #if they type 'go' first
   if move[0] == 'go':
-    #check that they are allowed wherever they want to go
-    if move[1] in rooms[currentRoom]:
-      #set the current room to the new room
-      currentRoom = rooms[currentRoom][move[1]]
+    if (move[1] in rooms[currentRoom]):
+      nextRoom = rooms[currentRoom][move[1]]
+      # check if the door to the next room is locked
+      if rooms[nextRoom]['locked']:
+        print('The door to the room you\'re trying to open is locked')
+      else:  
+        #set the current room to the new room
+        currentRoom = nextRoom
     #there is no door (link) to the new room
     else:
-        print('You can\'t go that way!')
+      print('You can\'t go that way!')
   # if they type 'inspect' first
   if move[0] == 'inspect' :
-    if 'noticeables' in rooms[currentRoom] and move[1] in rooms[currentRoom]['noticeables']:
+    if "noticeables" in rooms[currentRoom] and move[1] in rooms[currentRoom]['noticeables']:
+      # Dont loop back to showStatus()
+      repeat = False
       #Describe what is seen with closer inspection
       describeNoticeable()
     else:
-        print("That is not in this room")
+        print("That\'s not in here")
   #if they type 'get' first
   if move[0] == 'get' :
     #if the room contains an item, and the item is the one they want to get
@@ -148,8 +176,13 @@ while True:
       inventory += [move[1]]
       #display a helpful message
       print(move[1] + ' got!')
-      #delete the item from the room
-      del rooms[currentRoom]['item']
+      #delete the item from the listm
+      rooms[currentRoom]['items'].pop(rooms[currentRoom]['items'].index(move[1]))
+    # also, if the player gets a secret item
+    elif "secrets" in rooms[currentRoom] and move[1] in rooms[currentRoom]['secrets']:
+      inventory += [move[1]]
+      print(move[1] + ' got!')
+      rooms[currentRoom]['secrets'].pop(rooms[currentRoom]['secrets'].index(move[1]))
     #otherwise, if the item isn't there to get
     else:
       #tell them they can't get it
