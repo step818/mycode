@@ -78,8 +78,11 @@ rooms = {
                 },
             'Staircase (floor 1)' : {
                 'locked' : False,
-                'up' : 'Under Construction',
+                'up' : 'Bottlery',
                 'down' : 'Dungeon'
+                },
+            'Bottlery' : {
+                'down' : 'Hall'
                 },
             'Dungeon' : {
                 'locked' : False,
@@ -169,6 +172,8 @@ while True:
       repeat = False
       #Describe what is seen with closer inspection
       describeNoticeable()
+    elif ("items" in rooms[currentRoom]):
+      print(f"There\'s nothing to inspect here, it just says \'Made in China\'")
     else:
         print("That\'s not in here")
   #if they type 'get' first
@@ -195,15 +200,20 @@ while True:
     if move[1].lower() in inventory:
     # check if door can be unlocked with move[1]
     # if move[1] == 'key' and locked == True\
-      nextRoom = rooms[currentRoom]['south']
-      if move[1] == 'key' and nextRoom in lockedRooms:
-        lockedRooms.pop(lockedRooms.index(nextRoom))
-        inventory.pop(inventory.index(move[1]))
-        print(f"A {move[1]} unlocked a door to the {nextRoom}")
-      else:
-        print(f"{move[1]} doesn\'t seem to be useful here")
+      try:
+        if (rooms[currentRoom]['south']):
+          nextRoomSouth = rooms[currentRoom]['south']
+          if move[1] =='key' and nextRoomSouth in lockedRooms:
+            lockedRooms.pop(lockedRooms.index(nextRoomSouth))
+            inventory.pop(inventory.index(move[1]))
+            print(f"A {move[1]} unlocked a door to the {nextRoomSouth}")
+          else:
+            print(f"{move[1]} doesn\'t seem to be useful here")
+      except:
+        print("There aren\'t any locked doors in here")
     else:
       print(f"You don\'t have a {move[1]}")
+
 
 
 
