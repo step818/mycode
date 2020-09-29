@@ -13,6 +13,8 @@ This is an RPG addition to my instructors RPG for learning purposes
 # e.g. 'inspect fireplace' might return a print--> "You see an oil canister"
 # Since the items are lists, a for loop checks inside each list
 
+import neows02
+
 def showIntro():
     # print out the opening scene to the player
     print('''You were finishing up some python practice one evening\n when ''')
@@ -82,7 +84,17 @@ rooms = {
                 'down' : 'Dungeon'
                 },
             'Bottlery' : {
-                'down' : 'Hall'
+                'down' : 'Hall',
+                'north': 'Buttery',
+                'south': 'Solar'
+                },
+            'Buttery' : {
+                'south': 'Bottlery',
+                'east': 'Bed Chambers'
+                },
+            'Solar' : {
+                'north': 'Bottlery',
+                'west': 'Wardrobe'
                 },
             'Dungeon' : {
                 'locked' : False,
@@ -103,12 +115,13 @@ rooms = {
                 'south' : 'Foyer',
                 'west' : 'Kitchen',
                 'noticeables' : ['fireplace'],
-                'secrets' : ['match']
+                'secrets' : ['match'],
+                'items': ['letter']
                 },
             'Living Room' : {
                 'locked' : False,
                 'south' : 'Gallery',
-                'west' : ['Dining Room', 'Foyer']
+                'west' : 'Dining Room'
                 },
             'Gallery' : {
                 'locked' : True,
@@ -124,7 +137,7 @@ rooms = {
          }
 
 # declare all the locked doors
-lockedRooms = ['Gallery']
+lockedRooms = ['Gallery', 'Solar']
 
 #start the player in the Hall
 currentRoom = 'Foyer'
@@ -197,22 +210,36 @@ while True:
       print('Can\'t get ' + move[1] + '!')
     
   if move[0] == 'use':
+    use()
+    
+  def remoov(item):
+    inventory.pop(inventory.index(item))
+
+  def use():  
     if move[1].lower() in inventory:
     # check if door can be unlocked with move[1]
     # if move[1] == 'key' and locked == True\
-      try:
-        if (rooms[currentRoom]['south']):
-          nextRoomSouth = rooms[currentRoom]['south']
-          if move[1] =='key' and nextRoomSouth in lockedRooms:
-            lockedRooms.pop(lockedRooms.index(nextRoomSouth))
-            inventory.pop(inventory.index(move[1]))
-            print(f"A {move[1]} unlocked a door to the {nextRoomSouth}")
-          else:
-            print(f"{move[1]} doesn\'t seem to be useful here")
-      except:
-        print("There aren\'t any locked doors in here")
-    else:
-      print(f"You don\'t have a {move[1]}")
+      if move[1] == 'key':      
+        try:
+          if (rooms[currentRoom]['south']):
+            nextRoomSouth = rooms[currentRoom]['south']
+            if move[1] =='key' and nextRoomSouth in lockedRooms:
+              lockedRooms.pop(lockedRooms.index(nextRoomSouth))
+              remoov(move[1])
+              print(f"A {move[1]} unlocked a door to the {nextRoomSouth}")
+            else:
+              print(f"{move[1]} doesn\'t seem to be useful here")
+        except:
+          print("There aren\'t any locked doors in here")
+      
+      elif move[1].lower() == 'letter':
+        #From here I want to send a get request about a near earth object
+        # on its way to earth and include some clues of how to get out the house
+        print("A near earth object is heading toward earth")
+        remoov(move[1])
+      else:
+        print(f"You don\'t have a {move[1]}")      
+
 
 
 
