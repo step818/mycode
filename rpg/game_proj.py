@@ -30,6 +30,8 @@ Commands:
   get [item]
   inspect [noticeable]
   use [item]
+
+  show - to show current status
 ''')
 
 def showStatus():
@@ -63,23 +65,18 @@ inventory = []
 
 #a dictionary linking a room to other rooms
 rooms = {
-
             'Foyer' : { 
-                  'locked' : False,
-                  'south' : 'Field',
-                  'east' : 'Living Room',
+                  'south' : 'Gatehouse',
                   'north' : 'Dining Room',
                   'west' : 'Hall',
                   'noticeables': ['knight armor'],
                   'secrets': ['key']
                 },
             'Hall' : {
-                  'locked' : False,
                   'north' : 'Kitchen',
                   'west' : 'Staircase (floor 1)'
                 },
             'Staircase (floor 1)' : {
-                'locked' : False,
                 'up' : 'Bottlery',
                 'down' : 'Dungeon'
                 },
@@ -94,23 +91,25 @@ rooms = {
                 },
             'Solar' : {
                 'north': 'Bottlery',
-                'west': 'Wardrobe'
+                'west': 'Wardrobe',
+                'noticeables' : ['crystal ball']
+                },
+            'Wardrobe' : {
+                'east' : 'Solar'
                 },
             'Dungeon' : {
-                'locked' : False,
-                'west': 'Staircase (floor 0)'
+                'west': 'Staircase (floor 0)',
+                'south' : 'Oubliette',
+                'noticeables' : ['lock']
                 },
             'Staircase (floor 0)' : {
-                'locked' : False,
                 'up' : 'Hall'
                 },
             'Kitchen' : {
-                'locked' : False,
                 'south' : 'Hall',
                 'east' : 'Dining Room'
                 },
             'Dining Room' : {
-                'locked' : False,
                 'east' : 'Living Room',
                 'south' : 'Foyer',
                 'west' : 'Kitchen',
@@ -119,12 +118,10 @@ rooms = {
                 'items': ['letter']
                 },
             'Living Room' : {
-                'locked' : False,
                 'south' : 'Gallery',
                 'west' : 'Dining Room'
                 },
             'Gallery' : {
-                'locked' : True,
                 'north' : 'Living Room',
                 'south' : 'Library',
                 'items' : ['sword']
@@ -132,12 +129,15 @@ rooms = {
             'Library' : {
                 'north' : 'Gallery',
                 'noticeables' : ['bookcase'],
-                'secrets' : ['candle']
+                'secrets' : ['candle', 'silver key']
+                },
+            'Gatehouse' : {
+                'north' : 'Foyer'
                 }
          }
 
 # declare all the locked doors
-lockedRooms = ['Gallery', 'Solar']
+lockedRooms = ['Gallery', 'Solar', 'Oubliette']
 
 #start the player in the Hall
 currentRoom = 'Foyer'
@@ -164,7 +164,7 @@ while True:
   # split allows an items to have a space on them
   # get golden key is returned ["get", "golden key"]          
   move = move.lower().split(" ", 1)
-
+    
   #if they type 'go' first
   if move[0] == 'go':
     if (move[1] in rooms[currentRoom]):
@@ -172,23 +172,46 @@ while True:
       # check if the door to the next room is locked
       if nextRoom in lockedRooms:
         print('The door to the room you\'re trying to open is locked')
+        repeat = False
       else:  
         #set the current room to the new room
         currentRoom = nextRoom
     #there is no door (link) to the new room
     else:
       print('You can\'t go that way!')
+      repeat = False
+
   # if they type 'inspect' first
   if move[0] == 'inspect' :
     if "noticeables" in rooms[currentRoom] and move[1] in rooms[currentRoom]['noticeables']:
+      # Check if the Lock is being inspected
+      if (move[1] == 'lock'):
+        password = input(f"Passcode: \n")
+        if (password == '2009KK8'):
+          # unlock the Oubliette to the monster
+          print("You unlocked a secret door!")
+          repeat = False
+          continue
+        else:
+          print("That did\'nt seem to unlock anything.")
+          continue
+      if (move[1] == 'crystal ball'):
+        # Get the message from Nasa
+        print("The ball starts glowing, some misty-looking characters start forming in to familiar letters, lets look closer...")
+        # Sleep timer
+        neows02.main()
+        continue
       # Dont loop back to showStatus()
       repeat = False
       #Describe what is seen with closer inspection
       describeNoticeable()
-    elif ("items" in rooms[currentRoom]):
-      print(f"There\'s nothing to inspect here, it just says \'Made in China\'")
+    elif (move[1] in rooms[currentRoom]['items']):
+        print(f"I might be able to use this {move[1]} later, but there\'s nothing to inspect")
+        repeat = False
     else:
         print("That\'s not in here")
+        repeat = False
+
   #if they type 'get' first
   if move[0] == 'get' :
     #if the room contains an item, and the item is the one they want to get
@@ -197,6 +220,7 @@ while True:
       inventory += [move[1]]
       #display a helpful message
       print(move[1] + ' got!')
+      repeat = False
       #delete the item from the listm
       rooms[currentRoom]['items'].pop(rooms[currentRoom]['items'].index(move[1]))
     # also, if the player gets a secret item
@@ -204,15 +228,21 @@ while True:
       inventory += [move[1]]
       print(move[1] + ' got!')
       rooms[currentRoom]['secrets'].pop(rooms[currentRoom]['secrets'].index(move[1]))
+      repeat = False
     #otherwise, if the item isn't there to get
     else:
       #tell them they can't get it
       print('Can\'t get ' + move[1] + '!')
+      repeat = False
     
   if move[0] == 'use':
     use()
-    
-  def remoov(item):
+    repeat = False
+
+  if move[0] == 'show':
+    repeat = True
+
+  def removeInv(item):
     inventory.pop(inventory.index(item))
 
   def use():  
@@ -223,22 +253,33 @@ while True:
         try:
           if (rooms[currentRoom]['south']):
             nextRoomSouth = rooms[currentRoom]['south']
-            if move[1] =='key' and nextRoomSouth in lockedRooms:
+            if (move[1] =='key' and nextRoomSouth in lockedRooms):
               lockedRooms.pop(lockedRooms.index(nextRoomSouth))
-              remoov(move[1])
+              removeInv(move[1])
               print(f"A {move[1]} unlocked a door to the {nextRoomSouth}")
             else:
               print(f"{move[1]} doesn\'t seem to be useful here")
         except:
           print("There aren\'t any locked doors in here")
-      
+      elif move[1] == 'silver key':
+        try:
+          if (rooms[currentRoom]['south']):
+            nextRoomSouth = rooms[currentRoom]['south']
+            if (move[1] == 'silver key' and nextRoomSouth in lockedRooms):
+              lockedRooms.pop(lockedRooms.index(nextRoomSouth))
+              removeInv(move[1])
+              print(f"A {move[1]} unlocked a door to the {nextRoomSouth}")
+            else:
+              print(f"{move[1]} doesn\'t seem to be useful here")
+        except:
+            print("There aren\'t any locked doors in here")
       elif move[1].lower() == 'letter':
-        #From here I want to send a get request about a near earth object
-        # on its way to earth and include some clues of how to get out the house
-        print("A near earth object is heading toward earth")
-        remoov(move[1])
-      else:
-        print(f"You don\'t have a {move[1]}")      
+        print(" To whom it may concern, \n the password to the safe is the name of \n the hazardous object potentially about \n  to destoy the world.")
+        removeInv(move[1])
+      elif (move[1] in inventory):
+        print(f"I don\'t see how this {move[1]} would be useful now")
+    else:
+      print(f"You don\'t have a {move[1]}")      
 
 
 
