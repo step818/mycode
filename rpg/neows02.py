@@ -37,8 +37,7 @@ def main():
         for x in neodata["near_earth_objects"][y]:
             print(f"Asteroid Name: \'{x['name']}\'\n Potentially Hazardous?? {x['is_potentially_hazardous_asteroid']}")
             for z in x["close_approach_data"]:
-                print(f"{round(float(z['miss_distance']['kilometers']),0)} kilometers at closest approach, which equates to")
-                print(f"{round(float(z['miss_distance']['miles']),0)} miles")
+                print(f"{round(float(z['miss_distance']['kilometers']),0)} kilometers at closest approach\n")
                 print("====================================================")
 
 if __name__ == "__main__":

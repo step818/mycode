@@ -15,6 +15,7 @@ This is an RPG addition to my instructors RPG for learning purposes
 import os
 import threading
 import neows02
+import game_input
 
 def showIntro():
     # print out the opening scene to the player
@@ -103,6 +104,12 @@ rooms = {
                 'south' : 'Oubliette',
                 'noticeables' : ['lock']
                 },
+            'Oubliette' : {
+                'south' : 'Home'
+                },
+            'Home' : {
+                'game' : 'winner'
+                },
             'Staircase (floor 0)' : {
                 'up' : 'Hall'
                 },
@@ -174,21 +181,15 @@ while True:
       if nextRoom in lockedRooms:
         print('The door to the room you\'re trying to open is locked')
         repeat = False
-      else:  
+      else:
         #set the current room to the new room
         currentRoom = nextRoom
-    #there is no door (link) to the new room
+        #there is no door (link) to the new room
     else:
       print('You can\'t go that way!')
       repeat = False
   
-  def t1():
-    print("Task 1 assigned to thread: {}".format(threading.current_thread().name))
-    print("ID of process running task 1: {}".format(os.getpid()))
 
-  def t2():
-    print("Task 2 assigned to thread: {}".format(threading.current_thread().name))
-    print("ID of process running task 2: {}".format(os.getpid()))
 
   # if they type 'inspect' first
   if move[0] == 'inspect' :
@@ -199,6 +200,7 @@ while True:
         if (password == '2009KK8'):
           # unlock the Oubliette to the monster
           print("You unlocked a secret door!")
+          removeLRoom(rooms[currentRoom]['south'])
           repeat = False
           continue
         else:
@@ -253,13 +255,9 @@ while True:
 
   def removeInv(item):
     inventory.pop(inventory.index(item))
-    print("Task 2 assigned to thread: {}".format(threading.current_thread().name))
-    print("ID of process running task 2: {}".format(os.getpid()))
 
   def removeLRoom(room):
     lockedRooms.pop(lockedRooms.index(room))
-    print("Task 1 assigned to thread: {}".format(threading.current_thread().name))
-    print("ID of process running task 1: {}".format(os.getpid()))
 
   def use():
     if move[1].lower() in inventory:
@@ -282,23 +280,24 @@ while True:
           if (rooms[currentRoom]['south']):
             nextRoomSouth = rooms[currentRoom]['south']
             if (move[1] == 'silver key' and nextRoomSouth in lockedRooms):
-              t1 = threading.Thread(target=removeLRoom, args=(nextRoomSouth, ), name='t1')
-              t2 = threading.Thread(target=removeInv, args=(move[1], ), name='t2')
-              t1.start()
-              t2.start()
-              t1.join()
-              t2.join()
               print(f"A {move[1]} unlocked a door to the {nextRoomSouth}")
             else:
               print(f"{move[1]} doesn\'t seem to be useful here")
         except:
             print("There aren\'t any locked doors in here")
       elif move[1].lower() == 'letter':
-        print(" To whom it may concern, \n the password to the safe is the name of \n the hazardous object potentially about \n  to destoy the world.")
+        print(" To whom it may concern, \n the password to the safe is the name of \n the asteroid potentially about \n  to destoy the world.")
         removeInv(move[1])
       elif (move[1] in inventory):
         print(f"I don\'t see how this {move[1]} would be useful now")
     else:
       print(f"You don\'t have a {move[1]}")
 
+  if (currentRoom == 'Oubliette'):
+      checkMonster()
+
+  livingMonsters = ['Ancient Red Dragon']
+
+  def checkMonster():
+    # if monster, stop and try to kill the player
 
