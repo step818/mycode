@@ -12,7 +12,8 @@ This is an RPG addition to my instructors RPG for learning purposes
 # secrets lists are like items that can only be shown after inspection.
 # e.g. 'inspect fireplace' might return a print--> "You see an oil canister"
 # Since the items are lists, a for loop checks inside each list
-
+import os
+import threading
 import neows02
 
 def showIntro():
@@ -180,6 +181,14 @@ while True:
     else:
       print('You can\'t go that way!')
       repeat = False
+  
+  def t1():
+    print("Task 1 assigned to thread: {}".format(threading.current_thread().name))
+    print("ID of process running task 1: {}".format(os.getpid()))
+
+  def t2():
+    print("Task 2 assigned to thread: {}".format(threading.current_thread().name))
+    print("ID of process running task 2: {}".format(os.getpid()))
 
   # if they type 'inspect' first
   if move[0] == 'inspect' :
@@ -244,17 +253,24 @@ while True:
 
   def removeInv(item):
     inventory.pop(inventory.index(item))
+    print("Task 2 assigned to thread: {}".format(threading.current_thread().name))
+    print("ID of process running task 2: {}".format(os.getpid()))
 
-  def use():  
+  def removeLRoom(room):
+    lockedRooms.pop(lockedRooms.index(room))
+    print("Task 1 assigned to thread: {}".format(threading.current_thread().name))
+    print("ID of process running task 1: {}".format(os.getpid()))
+
+  def use():
     if move[1].lower() in inventory:
     # check if door can be unlocked with move[1]
     # if move[1] == 'key' and locked == True\
-      if move[1] == 'key':      
+      if move[1] == 'key':
         try:
           if (rooms[currentRoom]['south']):
             nextRoomSouth = rooms[currentRoom]['south']
             if (move[1] =='key' and nextRoomSouth in lockedRooms):
-              lockedRooms.pop(lockedRooms.index(nextRoomSouth))
+              removeLRoom(nextRoomSouth)
               removeInv(move[1])
               print(f"A {move[1]} unlocked a door to the {nextRoomSouth}")
             else:
@@ -266,8 +282,12 @@ while True:
           if (rooms[currentRoom]['south']):
             nextRoomSouth = rooms[currentRoom]['south']
             if (move[1] == 'silver key' and nextRoomSouth in lockedRooms):
-              lockedRooms.pop(lockedRooms.index(nextRoomSouth))
-              removeInv(move[1])
+              t1 = threading.Thread(target=removeLRoom, args=(nextRoomSouth, ), name='t1')
+              t2 = threading.Thread(target=removeInv, args=(move[1], ), name='t2')
+              t1.start()
+              t2.start()
+              t1.join()
+              t2.join()
               print(f"A {move[1]} unlocked a door to the {nextRoomSouth}")
             else:
               print(f"{move[1]} doesn\'t seem to be useful here")
@@ -279,9 +299,6 @@ while True:
       elif (move[1] in inventory):
         print(f"I don\'t see how this {move[1]} would be useful now")
     else:
-      print(f"You don\'t have a {move[1]}")      
-
-
-
+      print(f"You don\'t have a {move[1]}")
 
 
