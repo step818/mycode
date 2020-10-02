@@ -181,6 +181,9 @@ while True:
       if nextRoom in lockedRooms:
         print('The door to the room you\'re trying to open is locked')
         repeat = False
+      elif currentRoom == 'Oubliette' and 'Ancient Red Dragon' in livingMonsters:
+        print("That way is being blocked by the dragon.")
+        repeat = False
       else:
         #set the current room to the new room
         currentRoom = nextRoom
@@ -288,16 +291,27 @@ while True:
       elif move[1].lower() == 'letter':
         print(" To whom it may concern, \n the password to the safe is the name of \n the asteroid potentially about \n  to destoy the world.")
         removeInv(move[1])
+      elif move[1].lower() == 'sword':
+        if (currentRoom == 'Oubliette' and 'Ancient Red Dragon' in livingMonsters):
+          print("You want to duke it out, ok.")
+          answer = input("You do see how sharp his claws are right?  (y / n): ")
+            if answer.lower() == 'y':
+              print("You slayed it! The path is clear now.")
+              livingMonsters.pop(livingMonsters.index('Ancient Red Dragon'))
+              repeat - False
+              continue
+            else:
+              repeat = False    
+              print("Think about your next move...!")
+              continue
       elif (move[1] in inventory):
         print(f"I don\'t see how this {move[1]} would be useful now")
     else:
       print(f"You don\'t have a {move[1]}")
 
-  if (currentRoom == 'Oubliette'):
-      checkMonster()
+
 
   livingMonsters = ['Ancient Red Dragon']
 
-  def checkMonster():
-    # if monster, stop and try to kill the player
 
+      
