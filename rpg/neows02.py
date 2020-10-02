@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import requests
-
+import time
 ## Define NEOW URL 
 NEOURL = "https://api.nasa.gov/neo/rest/v1/feed?"
 
@@ -32,13 +32,23 @@ def main():
     for dat in neodata["near_earth_objects"]:
         dates.append(dat)
     print("\n")
-    print(f"!*!*!*!  Near Earth Objects approching on {startdate}  !*!*!*!\n")   
+    print(f"!*!*!*!  Near Earth Objects approching on {startdate}  !*!*!*!\n")
+    time.sleep(3)
+    # limit the amount of objects are returned for simplicity-sake
+    count = 0
     for y in dates:
         for x in neodata["near_earth_objects"][y]:
+            count += 1
             print(f"Asteroid Name: \'{x['name']}\'\n Potentially Hazardous?? {x['is_potentially_hazardous_asteroid']}")
+            time.sleep(1)
+            if (count > 3):
+                break
             for z in x["close_approach_data"]:
+    
                 print(f"{round(float(z['miss_distance']['kilometers']),0)} kilometers at closest approach\n")
+                time.sleep(1)
                 print("====================================================")
+                time.sleep(1)
 
 if __name__ == "__main__":
     main()

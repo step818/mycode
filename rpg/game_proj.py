@@ -16,6 +16,7 @@ import os
 import threading
 import neows02
 import time
+import sys
 import game_input
 
 def showIntro():
@@ -41,8 +42,22 @@ def showStatus():
   #print the player's current status
   print('---------------------------')
   print('You are in the ' + currentRoom)
+  # print the possible directions
+  print("Possible directions: ", end=' ')
+  if('north' in rooms[currentRoom]):
+    print("N", end=' ')
+  if('east' in rooms[currentRoom]):
+    print("E", end=' ')
+  if('south' in rooms[currentRoom]):
+    print("S", end=' ')
+  if('west' in rooms[currentRoom]):
+    print("W", end=' ')
+  if('up' in rooms[currentRoom]):
+    print("up", end=' ')
+  if('down' in rooms[currentRoom]):
+    print("down")
   #print the current inventory
-  print('Inventory : ' + str(inventory))
+  print('\nInventory : ' + str(inventory))
   #print an item if there is one
   if "items" in rooms[currentRoom]:
       for item in rooms[currentRoom]['items']:
@@ -52,6 +67,9 @@ def showStatus():
   if "noticeables" in rooms[currentRoom]:
       for thing in rooms[currentRoom]['noticeables']:
           print('You notice a ' + thing + '\n')
+  if ("game" in rooms[currentRoom]):
+      print("You enter the portal and it \n returns you back home. You made it!")
+      sys.exit()
   print("---------------------------")
 
 # Print out the secret items when player "inspects <noticeable>"
@@ -107,13 +125,13 @@ rooms= {
                 },
             'Oubliette' : {
                 'north' : 'Dungeon',
-                'south' : 'Home'
+                'south' : 'Portal'
                 },
-            'Home' : {
+            'Portal' : {
                 'game' : 'winner'
                 },
             'Staircase (floor 0)' : {
-                'up' : 'Staircase (floor1)',
+                'up' : 'Staircase (floor 1)',
                 'east' : 'Dungeon'
                 },
             'Kitchen' : {
@@ -126,11 +144,11 @@ rooms= {
                 'west' : 'Kitchen',
                 'noticeables' : ['fireplace'],
                 'secrets' : ['match'],
-                'items': ['letter']
                 },
             'Living Room' : {
                 'south' : 'Gallery',
-                'west' : 'Dining Room'
+                'west' : 'Dining Room',
+                'noticeables' : ['letter']
                 },
             'Gallery' : {
                 'north' : 'Living Room',
@@ -148,7 +166,7 @@ rooms= {
          }
 
 # declare all the locked doors
-lockedRooms = ['Gallery', 'Solar', 'Oubliette', 'Home']
+lockedRooms = ['Gallery', 'Solar', 'Oubliette', 'Portal']
 
 # declare all monsters
 livingMonsters = ['Ancient Red Dragon']
@@ -185,11 +203,15 @@ while True:
       nextRoom = rooms[currentRoom][move[1]]
       # check if the door to the next room is locked
       if nextRoom in lockedRooms:
+        if(nextRoom == 'Portal'):
+            print("You walked too close to the dragon. The dragon killed you:(")
+            sys.exit()
         print('The door to the room you\'re trying to open is locked')
         repeat = False
       elif 'Ancient Red Dragon' in livingMonsters and nextRoom == 'Oubliette':
         print(f"As you head in to the {nextRoom}, you see an Ancient Red Dragon straight ahead of you!!")
         currentRoom = nextRoom
+        repeat = False
       else:
         #set the current room to the new room
         currentRoom = nextRoom
@@ -207,8 +229,10 @@ while True:
       # Check if the Lock is being inspected
       # And that the Oubliette hasnt been granted access already
       if (move[1] == 'lock'):
+        with open("/home/student/dungeon.creds") as combination:
+          code = combination.read()
         password = input(f"Passcode: \n")
-        if (password == '2009KK8' and 'Oubliette' in lockedRooms):
+        if (password == code.strip("\n")  and 'Oubliette' in lockedRooms):
           # unlock the Oubliette to the monster
           print("You unlocked a secret door!")
           removeLRoom(rooms[currentRoom]['south'])
@@ -218,11 +242,21 @@ while True:
           print("That did\'nt seem to unlock anything.")
           repeat = False
           continue
+      # crytal ball
       if (move[1] == 'crystal ball'):
         # Get the message from Nasa
-        print("The ball starts glowing, some misty-looking characters start forming in to familiar letters, lets look closer...")
-        # Sleep timer
+        print("( ) ( ) ( ) ( ) ( ) ( ) ( )")
+        print("The ball starts glowing, \n some misty-looking characters start forming in to \n familiar letters, lets look closer...")
+        time.sleep(3)
         neows02.main()
+        repeat = False
+        continue
+      # letter
+      if (move[1] == 'letter'):
+        print("~~~~~~~~~~~~~~~~~~~~~~~")
+        print(" Dear Prince Herbert, \n the password to the lock in the Dungeon is \n the name of the asteroid potentially about \n to destoy the world.")
+        print("~~~~~~~~~~~~~~~~~~~~~~")
+        repeat = False
         continue
       # Dont loop back to showStatus()
       repeat = False
@@ -281,10 +315,11 @@ while True:
       # check if door can be unlocked with move[1]
       # if move[1] == 'key' and locked == True\
       nextRoomSouth = rooms[currentRoom]['south']
+      # key to the gallery
       if move[1] == 'key':
         try:
           if (rooms[currentRoom]['south']):
-            if (move[1] =='key' and nextRoomSouth in lockedRooms):
+            if (move[1] =='key' and nextRoomSouth in lockedRooms and nextRoomSouth == 'Gallery'):
               removeLRoom(nextRoomSouth)
               removeInv(move[1])
               print(f"A {move[1]} unlocked a door to the {nextRoomSouth}")
@@ -292,6 +327,7 @@ while True:
               print(f"{move[1]} doesn\'t seem to be useful here")
         except:
           print("There aren\'t any locked doors in here")
+      # silver key to solar
       elif move[1] == 'silver key':
         try:
           if (rooms[currentRoom]['south']):
@@ -304,15 +340,7 @@ while True:
               print(f"{move[1]} doesn\'t seem to be useful here")
         except:
             print("There aren\'t any locked doors in here")
-      # Letter      
-      elif move[1].lower() == 'letter':
-        print("~~~~~~~~~~~~~~~~~~~~~~~")
-        print(" Dear Prince Herbert, \n the password to the safe is the name of \n the asteroid potentially about \n  to destoy the world.")
-        print("~~~~~~~~~~~~~~~~~~~~~~")
-        time.sleep(2)
-        print("(The letter dissolves into thin air...)")
-        removeInv(move[1])
-      # Sword  
+      # Sword in oubliette 
       elif move[1].lower() == 'sword':
         if (currentRoom == 'Oubliette' and 'Ancient Red Dragon' in livingMonsters):
           print("You want to duke it out, ok.")
